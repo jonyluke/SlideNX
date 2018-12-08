@@ -113,11 +113,11 @@ void inputPoller()
         if(val2 != val1) {
             val1 = val2;
             if(val2) {
-                playMp3("SlideNX/attach.mp3");
+                playMp3("SlideNX/detach.mp3");
             }
 
             else {
-                playMp3("SlideNX/detach.mp3");
+                playMp3("SlideNX/attach.mp3");
             }
         }
 
@@ -131,11 +131,11 @@ void inputPoller()
         if(val4 != val3) {
             val3 = val4;
             if(val4) {
-                playMp3("SlideNX/attach.mp3");
+                playMp3("SlideNX/detach.mp3");
             }
 
             else {
-                playMp3("SlideNX/detach.mp3");
+                playMp3("SlideNX/attach.mp3");
             }
         }
     }
