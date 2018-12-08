@@ -117,7 +117,7 @@ void inputPoller()
             }
 
             else {
-                playMp3("SlideNX/attach.mp3");
+                playMp3("SlideNX/detach.mp3");
             }
         }
 
@@ -135,7 +135,7 @@ void inputPoller()
             }
 
             else {
-                playMp3("SlideNX/attach.mp3");
+                playMp3("SlideNX/detach.mp3");
             }
         }
     }
