@@ -23,9 +23,6 @@ u32 __nx_applet_type = AppletType_None;
 // setup a fake heap
 char fake_heap[HEAP_SIZE];
 
-bool rfirst = true;
-bool attach = false;
-
 // we override libnx internals to do a minimal init
 void __libnx_initheap(void)
 {
@@ -91,29 +88,55 @@ void inputPoller()
 {
 	mp3MutInit();
 	pauseInit();
+	gpioInitialize();
+	GpioPadSession joycon_L_attach, joycon_R_attach;
+	bool rfirst = true, rfirst2 = true;
 	
+	gpioOpenSession(&joycon_L_attach, (GpioPadName)0x0c);
+	gpioOpenSession(&joycon_R_attach, (GpioPadName)0x34);
+
+	gpioPadSetDirection(&joycon_L_attach, GpioDirection_Input);
+	gpioPadSetDirection(&joycon_R_attach, GpioDirection_Input);
+
+	GpioValue val1, val2, val3, val4;
 	while (appletMainLoop())
 	{
-		svcSleepThread(1e+8L);
+	svcSleepThread(1e+8L);
 	
-		HidSharedMemory *hmem = (HidSharedMemory*)hidGetSharedmemAddr();
-		if(rfirst)
-		{
+	if(rfirst){
 			rfirst = false;
-			u64 connection = hmem->controllers[0].layouts[6].entries[hmem->controllers[0].layouts[6].header.latestEntry].connectionState;
-			attach = !(connection & CONTROLLER_STATE_CONNECTED);
+			gpioPadGetValue(&joycon_L_attach, &val1);
 		}
-		u64 connection = hmem->controllers[0].layouts[6].entries[hmem->controllers[0].layouts[6].header.latestEntry].connectionState;
-		bool nattach = !(connection & CONTROLLER_STATE_CONNECTED);
-		if(nattach != attach)
-		{
-			attach = nattach;
-			if(nattach){
+		
+		gpioPadGetValue(&joycon_L_attach, &val2);
+		
+		if(val2 != val1){
+			val1 = val2;
+			if(val2){
 				playMp3("SlideNX/attach.mp3");
 			}
+			
 			else{
-				playMp3("SlideNX/detach.mp3");
-			}	
+				playMp3("SlideNX/attach.mp3");
+			}
+		}
+		
+		if(rfirst2){
+			rfirst2 = false;
+			gpioPadGetValue(&joycon_R_attach, &val3);
+		}
+		
+		gpioPadGetValue(&joycon_R_attach, &val4);
+		
+		if(val4 != val3){
+			val3 = val4;
+			if(val4){
+				playMp3("SlideNX/attach.mp3");
+			}
+			
+			else{
+				playMp3("SlideNX/attach.mp3");
+			}
 		}
 	}
 }
