@@ -5,7 +5,7 @@
 #include <math.h>
 #include <mpg123.h>
 #include <time.h>
-#include "util.h"
+
 
 
 #include <switch.h>
@@ -76,26 +76,6 @@ int initMp3(const char* file)
 
 
 	return 0;
-}
-
-/**
- * Get sampling rate of MP3 file.
- *
- * \return	Sampling rate.
- */
-uint32_t rateMp3(void)
-{
-	return rate;
-}
-
-/**
- * Get number of channels of MP3 file.
- *
- * \return	Number of channels for opened file.
- */
-uint8_t channelMp3(void)
-{
-	return channels;
 }
 
 /**

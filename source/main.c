@@ -1,93 +1,61 @@
-#include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <dirent.h>
-
 #include <errno.h>
 #include <malloc.h>
 #include <stdarg.h>
 #include <unistd.h>
-
-
+#include <switch.h>
+#include "mp3.h"
 #include <switch.h>
 
-#include "util.h"
-
-#include "mp3.h"
-
-#define TITLE_ID 0x420000000000000F
-#define HEAP_SIZE 0x000540000
-
-// we aren't an applet
 u32 __nx_applet_type = AppletType_None;
 
-// setup a fake heap
-char fake_heap[HEAP_SIZE];
+#define INNER_HEAP_SIZE 0x80000
+size_t nx_inner_heap_size = INNER_HEAP_SIZE;
+char   nx_inner_heap[INNER_HEAP_SIZE];
 
-// we override libnx internals to do a minimal init
 void __libnx_initheap(void)
 {
-    extern char *fake_heap_start;
-    extern char *fake_heap_end;
+	void*  addr = nx_inner_heap;
+	size_t size = nx_inner_heap_size;
 
-    // setup newlib fake heap
-    fake_heap_start = fake_heap;
-    fake_heap_end = fake_heap + HEAP_SIZE;
+	// Newlib
+	extern char* fake_heap_start;
+	extern char* fake_heap_end;
+
+	fake_heap_start = (char*)addr;
+	fake_heap_end   = (char*)addr + size;
 }
 
-void registerFspLr()
-{
-    if (kernelAbove400())
-        return;
-
-    Result rc = fsprInitialize();
-    if (R_FAILED(rc))
-        fatalLater(rc);
-
-    u64 pid;
-    svcGetProcessId(&pid, CUR_PROCESS_HANDLE);
-
-    rc = fsprRegisterProgram(pid, TITLE_ID, FsStorageId_NandSystem, NULL, 0, NULL, 0);
-    if (R_FAILED(rc))
-        fatalLater(rc);
-    fsprExit();
-}
-
-void __appInit(void)
+void __attribute__((weak)) __appInit(void)
 {
     Result rc;
-    svcSleepThread(10000000000L);
+
     rc = smInitialize();
     if (R_FAILED(rc))
-        fatalLater(rc);
+        fatalSimple(MAKERESULT(Module_Libnx, LibnxError_InitFail_SM));
+
     rc = fsInitialize();
     if (R_FAILED(rc))
-        fatalLater(rc);
-    registerFspLr();
-    rc = fsdevMountSdmc();
-    if (R_FAILED(rc))
-        fatalLater(rc);
-    rc = timeInitialize();
-    if (R_FAILED(rc))
-        fatalLater(rc);
-    rc = hidInitialize();
-    if (R_FAILED(rc))
-        fatalLater(rc);
+        fatalSimple(MAKERESULT(Module_Libnx, LibnxError_InitFail_FS));
+
+    fsdevMountSdmc();
 }
 
-void __appExit(void)
+void __attribute__((weak)) userAppExit(void);
+
+void __attribute__((weak)) __appExit(void)
 {
     fsdevUnmountAll();
     fsExit();
     smExit();
-    audoutExit();
-    timeExit();
 }
 
-
-void inputPoller()
+int main(int argc, char* argv[])
 {
     mp3MutInit();
-    pauseInit();
     gpioInitialize();
     GpioPadSession joycon_L_attach, joycon_R_attach;
     bool rfirst = true, rfirst2 = true;
@@ -139,29 +107,5 @@ void inputPoller()
             }
         }
     }
-}
-
-int main(int argc, char **argv)
-{
-    (void)argc;
-    (void)argv;
-
-    Thread pauseThread;
-    Result rc = threadCreate(&pauseThread, inputPoller, NULL, 0x4000, 49, 3);
-    if (R_FAILED(rc))
-        fatalLater(rc);
-    rc = threadStart(&pauseThread);
-    if (R_FAILED(rc))
-        fatalLater(rc);
-
-
-    while (true)
-    {
-        while (isPaused())
-        {
-            svcSleepThread(1000000000L);
-        }
-    }
-
     return 0;
 }

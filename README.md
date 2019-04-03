@@ -4,8 +4,7 @@ A work in progress module to change JoyCon attach/detach sound
 At the moment i was not able to mute default nintendo sound.
 
 Download the [latest release](https://github.com/jonyluke/SlideNX/releases) and extract it to the root folder of your SD card.
-Now you can launch it with Hekate.
-If you want it also in ReiNX copy "slidenx.kip" from modules folder to /ReiNX/sysmodules
+Now you can use it with Hekate.
 
 ## How to use
 
