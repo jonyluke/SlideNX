@@ -10,8 +10,10 @@ Now you can use it with Hekate.
 
 (There are already mp3 files for testing)
 
-Add the sound files you want to use to SlideNX folder
+Add the sound files you want to use to sounds folder
 
 For changing the attach sound rename your mp3 to attach.mp3
 
 For changing the disattach sound rename your mp3 to detach.mp3
+
+If you want to use random sounds, change the content of the config.ini file from random=false to random=true and add all the mp3s in the sounds folder.

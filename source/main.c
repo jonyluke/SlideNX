@@ -8,25 +8,24 @@
 #include <unistd.h>
 #include <switch.h>
 #include "mp3.h"
-#include <switch.h>
 
 u32 __nx_applet_type = AppletType_None;
 
 #define INNER_HEAP_SIZE 0x80000
 size_t nx_inner_heap_size = INNER_HEAP_SIZE;
-char   nx_inner_heap[INNER_HEAP_SIZE];
+char nx_inner_heap[INNER_HEAP_SIZE];
 
 void __libnx_initheap(void)
 {
-	void*  addr = nx_inner_heap;
-	size_t size = nx_inner_heap_size;
+    void *addr = nx_inner_heap;
+    size_t size = nx_inner_heap_size;
 
-	// Newlib
-	extern char* fake_heap_start;
-	extern char* fake_heap_end;
+    // Newlib
+    extern char *fake_heap_start;
+    extern char *fake_heap_end;
 
-	fake_heap_start = (char*)addr;
-	fake_heap_end   = (char*)addr + size;
+    fake_heap_start = (char *)addr;
+    fake_heap_end = (char *)addr + size;
 }
 
 void __attribute__((weak)) __appInit(void)
@@ -53,7 +52,7 @@ void __attribute__((weak)) __appExit(void)
     smExit();
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     mp3MutInit();
     gpioInitialize();
@@ -67,43 +66,115 @@ int main(int argc, char* argv[])
     gpioPadSetDirection(&joycon_R_attach, GpioDirection_Input);
 
     GpioValue val1, val2, val3, val4;
+    int randomIndex;
+    DIR *d;
+    struct dirent *dir;
+    int n = 0;
+    int i = 0;
+
+    FILE *f = fopen("SlideNX/config.ini", "r");
+    char cadena[13];
+
+    if (f)
+    {
+        fgets(cadena, 13, f);
+        fclose(f);
+    }
+
+    d = opendir("SlideNX/sounds");
+
+    if (d)
+    {
+        while ((dir = readdir(d)) != NULL)
+        {
+            n++;
+        }
+        closedir(d);
+    }
+
+    char *filenames[n];
+
+    if (strcmp(cadena, "random=false") != 0)
+    {
+
+        d = opendir("SlideNX/sounds");
+
+        if (d)
+        {
+            while ((dir = readdir(d)) != NULL)
+            {
+                filenames[i] = malloc(strlen(dir->d_name) + strlen("SlideNX/sounds/") + 1);
+                strcpy(filenames[i], "SlideNX/sounds/");
+                strcat(filenames[i], dir->d_name);
+                i++;
+            }
+            closedir(d);
+        }
+
+        srand(time(NULL));
+    }
+
     while (appletMainLoop())
     {
         svcSleepThread(1e+8L);
 
-        if(rfirst) {
+        if (rfirst)
+        {
             rfirst = false;
             gpioPadGetValue(&joycon_L_attach, &val1);
         }
 
         gpioPadGetValue(&joycon_L_attach, &val2);
 
-        if(val2 != val1) {
+        if (val2 != val1)
+        {
             val1 = val2;
-            if(val2) {
-                playMp3("SlideNX/detach.mp3");
+            if (strcmp(cadena, "random=false") != 0)
+            {
+                randomIndex = rand() % i;
+                playMp3(filenames[randomIndex]);
             }
+            else
+            {
+                if (val2)
+                {
+                    playMp3("SlideNX/sounds/detach.mp3");
+                }
 
-            else {
-                playMp3("SlideNX/attach.mp3");
+                else
+                {
+                    playMp3("SlideNX/sounds/attach.mp3");
+                }
             }
         }
 
-        if(rfirst2) {
+        if (rfirst2)
+        {
             rfirst2 = false;
             gpioPadGetValue(&joycon_R_attach, &val3);
         }
 
         gpioPadGetValue(&joycon_R_attach, &val4);
 
-        if(val4 != val3) {
+        if (val4 != val3)
+        {
             val3 = val4;
-            if(val4) {
-                playMp3("SlideNX/detach.mp3");
+            if (strcmp(cadena, "random=false") != 0)
+            {
+                randomIndex = rand() % i;
+                playMp3(filenames[randomIndex]);
             }
+            else
+            {
+                if (val4)
+                {
+                    playMp3("SlideNX/sounds/detach.mp3");
+                }
 
-            else {
-                playMp3("SlideNX/attach.mp3");
+                else
+                {
+                    playMp3("SlideNX/sounds/attach.mp3");
+                }
             }
         }
     }
